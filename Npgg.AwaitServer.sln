@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Npgg.AwaitServer", "Npgg.AwaitServer\Npgg.AwaitServer.csproj", "{A61E6E89-2AC2-4255-A97C-02A3410D09B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{1F52E703-7391-4AE2-9920-BEDD5ACF8792}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleServer", "SampleServer\SampleServer.csproj", "{1F52E703-7391-4AE2-9920-BEDD5ACF8792}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,22 +5,23 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Npgg.AwaitServer
+namespace Npgg.Socket
 {
-    public abstract class Server<TSESSION>
+    public abstract class AsyncServer<TSESSION>
     {
         public readonly int HeaderSize;
 
-        public abstract int GetBodySize(byte[] header);
+        public abstract int GetPayloadLength(byte[] header);
+
         public abstract Task OnReceiveMessage(TSESSION session, byte[] message);
 
-        public abstract TSESSION CreateSession(TcpClient client);
+        public abstract TSESSION OnSessionOpened(TcpClient client);
 
-        public abstract TSESSION OnSessionClosed(TSESSION session);
+        public abstract void OnSessionClosed(TSESSION session);
 
-        public abstract TSESSION OnCatchException(TSESSION session, Exception ex);
+        public abstract void OnSessionClosed(TSESSION session, Exception ex);
 
-        public Server(int headerSize)
+        public AsyncServer(int headerSize)
         {
             HeaderSize = headerSize;
         }
@@ -40,7 +41,7 @@ namespace Npgg.AwaitServer
         async Task StartReceive(TcpClient tcpClient)
         {
             tcpClient.Client.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
-            TSESSION session = this.CreateSession(tcpClient);
+            TSESSION session = this.OnSessionOpened(tcpClient);
             try
             {
                 var headerBuffer = new byte[HeaderSize];
@@ -50,16 +51,13 @@ namespace Npgg.AwaitServer
                 {
                     while (true)
                     {
-                        await fill(stream, headerBuffer, HeaderSize).ConfigureAwait(false);
+                        await Read(stream, headerBuffer, HeaderSize).ConfigureAwait(false);
 
-                        var length = this.GetBodySize(headerBuffer);
-                        if (length == 0)
-                        {
-                            return;
-                        }
+                        var length = this.GetPayloadLength(headerBuffer);
 
                         var payloadBuffer = arrayPool.Rent(length);
-                        await fill(stream, payloadBuffer, length).ConfigureAwait(false);
+
+                        await Read(stream, payloadBuffer, length).ConfigureAwait(false);
 
                         await OnReceiveMessage(session, payloadBuffer);
                         
@@ -69,7 +67,7 @@ namespace Npgg.AwaitServer
             }
             catch (Exception ex)
             {
-                this.OnCatchException(session, ex);
+                this.OnSessionClosed(session, ex);
             }
             finally
             {
@@ -78,7 +76,7 @@ namespace Npgg.AwaitServer
             }
         }
 
-        async Task fill(NetworkStream stream, byte[] buffer, int rest)
+        async Task Read(NetworkStream stream, byte[] buffer, int rest)
         {
             int offset = 0;
             while (rest > 0)
