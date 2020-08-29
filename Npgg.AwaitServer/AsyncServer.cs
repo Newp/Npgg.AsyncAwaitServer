@@ -26,16 +26,22 @@ namespace Npgg.Socket
             HeaderSize = headerSize;
         }
 
+        TcpListener listener = null;
+
         public async Task Run(IPEndPoint end)
         {
-            var listener = new TcpListener(end);
-            
+            this.listener = new TcpListener(end);
+
             while (true)
             {
                 var client = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
 
-                _ = StartReceive( client);
+                _ = StartReceive(client);
             }
+        }
+        public void Stop()
+        {
+            this.listener.Stop();
         }
 
         async Task StartReceive(TcpClient tcpClient)
@@ -76,19 +82,20 @@ namespace Npgg.Socket
             }
         }
 
-        async Task Read(NetworkStream stream, byte[] buffer, int rest)
+        async Task Read(NetworkStream stream, byte[] buffer, int length)
         {
             int offset = 0;
+            int rest = length;
             while (rest > 0)
             {
-                var length = await stream.ReadAsync(buffer, offset, rest, CancellationToken.None).ConfigureAwait(false);
+                var readLength = await stream.ReadAsync(buffer, offset, rest, CancellationToken.None).ConfigureAwait(false);
                 
-                if (length == 0)
+                if (readLength == 0)
                 {
                     throw new Exception("recv 0");
                 }
-                rest -= length;
-                offset += length;
+                rest -= readLength;
+                offset += readLength;
             }
 
         }
