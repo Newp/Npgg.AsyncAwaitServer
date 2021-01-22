@@ -57,13 +57,13 @@ namespace Npgg.Socket
                 {
                     while (true)
                     {
-                        await Read(stream, headerBuffer, HeaderSize).ConfigureAwait(false);
+                        await stream.FillAsync(headerBuffer, HeaderSize).ConfigureAwait(false);
 
                         var length = this.GetPayloadLength(headerBuffer);
 
                         var payloadBuffer = arrayPool.Rent(length);
 
-                        await Read(stream, payloadBuffer, length).ConfigureAwait(false);
+                        await stream.FillAsync(payloadBuffer, length).ConfigureAwait(false);
 
                         await OnReceiveMessage(session, payloadBuffer);
                         
@@ -82,22 +82,6 @@ namespace Npgg.Socket
             }
         }
 
-        async Task Read(NetworkStream stream, byte[] buffer, int length)
-        {
-            int offset = 0;
-            int rest = length;
-            while (rest > 0)
-            {
-                var readLength = await stream.ReadAsync(buffer, offset, rest, CancellationToken.None).ConfigureAwait(false);
-                
-                if (readLength == 0)
-                {
-                    throw new Exception("recv 0");
-                }
-                rest -= readLength;
-                offset += readLength;
-            }
-
-        }
+        
     }
 }
