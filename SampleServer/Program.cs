@@ -32,7 +32,7 @@ namespace ConsoleApp1
         }
         public override void OnSessionClosed(int session) => Console.WriteLine($"session closed : {session}");
 
-        public override async Task OnReceiveMessage(int session, byte[] message)
+        public override async Task OnReceiveMessage(int session, byte[] header, byte[] message, int length)
         {
             //do something
             await Task.CompletedTask;

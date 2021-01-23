@@ -13,7 +13,7 @@ namespace Npgg.Socket
 
         public abstract int GetPayloadLength(byte[] header);
 
-        public abstract Task OnReceiveMessage(TSESSION session, byte[] message);
+        public abstract Task OnReceiveMessage(TSESSION session, byte[] header, byte[] message, int length);
 
         public abstract TSESSION OnSessionOpened(TcpClient client);
 
@@ -65,7 +65,7 @@ namespace Npgg.Socket
 
                         await stream.FillAsync(payloadBuffer, length).ConfigureAwait(false);
 
-                        await OnReceiveMessage(session, payloadBuffer);
+                        await OnReceiveMessage(session, headerBuffer, payloadBuffer, length);
                         
                         arrayPool.Return(payloadBuffer);
                     }
