@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Npgg.Socket
 {
+
     public abstract class AsyncServer<TSESSION>
     {
         public readonly int HeaderSize;
@@ -31,7 +32,7 @@ namespace Npgg.Socket
         public async Task Run(IPEndPoint end)
         {
             this.listener = new TcpListener(end);
-
+            this.listener.Start();
             while (true)
             {
                 var client = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
@@ -57,13 +58,13 @@ namespace Npgg.Socket
                 {
                     while (true)
                     {
-                        await stream.FillAsync(headerBuffer, HeaderSize).ConfigureAwait(false);
+                        await stream.FillAsync(headerBuffer, HeaderSize, CancellationToken.None).ConfigureAwait(false);
 
                         var length = this.GetPayloadLength(headerBuffer);
 
                         var payloadBuffer = arrayPool.Rent(length);
 
-                        await stream.FillAsync(payloadBuffer, length).ConfigureAwait(false);
+                        await stream.FillAsync(payloadBuffer, length, CancellationToken.None).ConfigureAwait(false);
 
                         await OnReceiveMessage(session, headerBuffer, payloadBuffer, length);
                         

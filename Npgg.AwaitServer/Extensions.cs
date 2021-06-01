@@ -9,15 +9,18 @@ namespace Npgg.Socket
 {
     public static class Extensions
     {
-        public static Task FillAsync(this TcpClient client, byte[] buffer, int length)=> client.GetStream().FillAsync(buffer, length);
 
-        public static async Task FillAsync(this NetworkStream stream, byte[] buffer, int length)
+        public static async Task FillAsync(this NetworkStream stream, byte[] buffer, int length, CancellationToken cancellationToken)
         {
             int offset = 0;
             int rest = length;
             while (rest > 0)
             {
-                var readLength = await stream.ReadAsync(buffer, offset, rest, CancellationToken.None).ConfigureAwait(false);
+                var readTask = stream.ReadAsync(buffer, offset, rest);
+
+                readTask.Wait(cancellationToken);
+
+                var readLength = readTask.Result;
 
                 if (readLength == 0)
                 {
