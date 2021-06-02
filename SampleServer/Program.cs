@@ -24,6 +24,7 @@ namespace ConsoleApp1
 
             client.Client.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
 
+
             await Send(new byte[] { 1, 2, 3, 4 });
 
             Console.WriteLine("go");
@@ -31,6 +32,9 @@ namespace ConsoleApp1
             {
                 var xx = Console.ReadKey(true);
                 var encoded = Encoding.ASCII.GetBytes(new char[] { xx.KeyChar });
+
+                Console.WriteLine($"send : {xx.KeyChar}");
+
                 await Send(encoded);
             }
         }
@@ -48,9 +52,4 @@ namespace ConsoleApp1
     }
 
 
-    public class SampleSession
-    {
-        public int SessionId { get; set; }
-        public TcpClient Client { get; set; }
-    }
 }
