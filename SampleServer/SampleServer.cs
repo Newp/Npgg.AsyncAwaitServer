@@ -27,7 +27,7 @@ namespace ConsoleApp1
             var text = Encoding.ASCII.GetString(message, 0, length);
 
             Console.WriteLine($"on recv {text}");
-            var cts = new CancellationTokenSource();
+            using var cts = new CancellationTokenSource();
 
             var stream = session.Stream;
             try
@@ -46,12 +46,13 @@ namespace ConsoleApp1
                     await stream.FillAsync(payload, payload.Length, default);
                     var readText = Encoding.ASCII.GetString(payload);
 
+                    await stream.WriteAsync(new byte[1]);
+
                     Console.WriteLine($"recv : {readText} ({BitConverter.ToInt32(buffer, 0)})");
                 }
             }
             catch (Exception)
             {
-                cts.Dispose();
                 Console.WriteLine("passed");
             }
             

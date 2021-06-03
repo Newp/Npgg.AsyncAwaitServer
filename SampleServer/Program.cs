@@ -28,6 +28,7 @@ namespace ConsoleApp1
             await Send(new byte[] { 1, 2, 3, 4 });
 
             Console.WriteLine("go");
+            var readBuffer = new byte[100];
             while(true)
             {
                 var xx = Console.ReadKey(true);
@@ -36,6 +37,12 @@ namespace ConsoleApp1
                 Console.WriteLine($"send : {xx.KeyChar}");
 
                 await Send(encoded);
+
+                var stream = client.GetStream();
+                
+                var ack = await stream.ReadAsync(readBuffer, 0, readBuffer.Length);
+
+                Console.WriteLine("ack :" + ack);
             }
         }
         static TcpClient client = new TcpClient();
