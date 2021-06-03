@@ -12,6 +12,8 @@ namespace ConsoleApp1
     {
         public int SessionId { get; set; }
         public TcpClient Client { get; set; }
+
+        public NetworkStream Stream { get; set; }
     }
 
     public class SampleServer : AsyncServer<SampleSession>
@@ -27,17 +29,21 @@ namespace ConsoleApp1
             Console.WriteLine($"on recv {text}");
             var cts = new CancellationTokenSource();
 
-            var stream = session.Client.GetStream();
+            var stream = session.Stream;
             try
             {
+                
                 Console.WriteLine("ready");
                 while (true)
                 {
                     cts.CancelAfter(3000);
-                    var buffer = new byte[5];
+                    var buffer = new byte[4];
+                    
                     await stream.FillAsync(buffer, buffer.Length, cts.Token);
+                    var recvSize = BitConverter.ToInt32(buffer);
 
-                    var payload = buffer[4..];
+                    var payload = new byte[recvSize];
+                    await stream.FillAsync(payload, payload.Length, default);
                     var readText = Encoding.ASCII.GetString(payload);
 
                     Console.WriteLine($"recv : {readText} ({BitConverter.ToInt32(buffer, 0)})");
@@ -45,6 +51,7 @@ namespace ConsoleApp1
             }
             catch (Exception)
             {
+                cts.Dispose();
                 Console.WriteLine("passed");
             }
             
@@ -58,11 +65,13 @@ namespace ConsoleApp1
             {
                 SessionId = session,
                 Client = client,
+                Stream = client.GetStream(),
             };
         }
 
         public override void OnSessionClosed(SampleSession session)
         {
+            Console.WriteLine($"error> {session.SessionId}");
         }
 
         public override void OnSessionClosed(SampleSession session, Exception ex)

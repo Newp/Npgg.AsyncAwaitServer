@@ -14,18 +14,14 @@ namespace Npgg.Socket
         {
             int offset = 0;
             int rest = length;
+            
             while (rest > 0)
             {
-                var readTask = stream.ReadAsync(buffer, offset, rest);
+                var readLength = await stream.ReadAsync(buffer, offset, rest, cancellationToken);
 
-                readTask.Wait(cancellationToken);
-
-                var readLength = readTask.Result;
-
-                if (readLength == 0)
-                {
+                if (readLength == 0) 
                     throw new Exception("recv 0");
-                }
+                
                 rest -= readLength;
                 offset += readLength;
             }
