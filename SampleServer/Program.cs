@@ -24,10 +24,8 @@ namespace ConsoleApp1
 
             client.Client.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
 
+            await Send(Encoding.ASCII.GetBytes("CONNECT"));
 
-            await Send(new byte[] { 1, 2, 3, 4 });
-
-            Console.WriteLine("go");
             var readBuffer = new byte[100];
             while(true)
             {
@@ -40,9 +38,9 @@ namespace ConsoleApp1
 
                 var stream = client.GetStream();
                 
-                var ack = await stream.ReadAsync(readBuffer, 0, readBuffer.Length);
+                //var ack = await stream.ReadAsync(readBuffer, 0, readBuffer.Length);
 
-                Console.WriteLine("ack :" + ack);
+                //Console.WriteLine("ack :" + ack);
             }
         }
         static TcpClient client = new TcpClient();
@@ -54,6 +52,7 @@ namespace ConsoleApp1
             var message = length.Concat(payload).ToArray();
 
             var stream = client.GetStream();
+            Console.WriteLine("send : " + payload.Length);
             await stream.WriteAsync(message, 0, message.Length, CancellationToken.None);
         }
     }

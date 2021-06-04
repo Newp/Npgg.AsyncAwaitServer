@@ -22,40 +22,13 @@ namespace ConsoleApp1
 
         public override int GetPayloadLength(byte[] header) => BitConverter.ToInt32(header);
 
-        public override async Task OnReceiveMessage(SampleSession session, byte[] header, byte[] message, int length)
+        public override Task OnReceiveMessage(SampleSession session, byte[] header, byte[] message, int length)
         {
             var text = Encoding.ASCII.GetString(message, 0, length);
 
             Console.WriteLine($"on recv {text}");
-            using var cts = new CancellationTokenSource();
 
-            var stream = session.Stream;
-            try
-            {
-                
-                Console.WriteLine("ready");
-                while (true)
-                {
-                    cts.CancelAfter(3000);
-                    var buffer = new byte[4];
-                    
-                    await stream.FillAsync(buffer, buffer.Length, cts.Token);
-                    var recvSize = BitConverter.ToInt32(buffer);
-
-                    var payload = new byte[recvSize];
-                    await stream.FillAsync(payload, payload.Length, default);
-                    var readText = Encoding.ASCII.GetString(payload);
-
-                    await stream.WriteAsync(new byte[1]);
-
-                    Console.WriteLine($"recv : {readText} ({BitConverter.ToInt32(buffer, 0)})");
-                }
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("passed");
-            }
-            
+            return Task.CompletedTask;
         }
 
         public override SampleSession OnSessionOpened(TcpClient client)
@@ -77,7 +50,7 @@ namespace ConsoleApp1
 
         public override void OnSessionClosed(SampleSession session, Exception ex)
         {
-            Console.WriteLine($"error> {session.SessionId}\n {ex.ToString()}");
+            Console.WriteLine($"error> {session.SessionId}\n {ex}");
         }
 
         int sessionIdSeq = 0;

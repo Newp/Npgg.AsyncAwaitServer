@@ -47,30 +47,45 @@ namespace Npgg.Socket
 
         async Task StartReceive(TcpClient tcpClient)
         {
-            tcpClient.Client.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
+            var socket = tcpClient.Client;
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
             TSESSION session = this.OnSessionOpened(tcpClient);
             try
             {
                 var headerBuffer = new byte[HeaderSize];
                 var arrayPool = ArrayPool<byte>.Shared;
 
-                using (var stream = tcpClient.GetStream())
+                
+                while (true)
                 {
-                    while (true)
+                    Console.WriteLine($"connected : {socket.Connected}");
+                    using var cts = new CancellationTokenSource();
+                    try
                     {
-                        await stream.FillAsync(headerBuffer, HeaderSize, CancellationToken.None).ConfigureAwait(false);
+                        cts.CancelAfter(3000); //헤더를 3초안에 받지 못하면 다음 루프로 = OperationCanceledException
+                        await socket.FillAsync(headerBuffer, HeaderSize, cts.Token).ConfigureAwait(false);
 
                         var length = this.GetPayloadLength(headerBuffer);
 
                         var payloadBuffer = arrayPool.Rent(length);
 
-                        await stream.FillAsync(payloadBuffer, length, CancellationToken.None).ConfigureAwait(false);
+                        await socket.FillAsync(payloadBuffer, length, CancellationToken.None).ConfigureAwait(false);
 
                         await OnReceiveMessage(session, headerBuffer, payloadBuffer, length);
-                        
+
                         arrayPool.Return(payloadBuffer);
                     }
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine($"OperationCanceledException => connected :  {socket.Connected}");
+                        continue;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
                 }
+                
             }
             catch (Exception ex)
             {
