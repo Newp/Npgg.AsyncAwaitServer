@@ -9,6 +9,15 @@ namespace Npgg.Socket
 {
     public static class Extensions
     {
+        public static bool IsConnected(this System.Net.Sockets.Socket socket)
+        {
+            bool part1 = socket.Poll(1000, SelectMode.SelectRead);
+            bool part2 = (socket.Available == 0);
+            if (part1 && part2)
+                return false;
+            else
+                return true;
+        }
 
         public static async Task FillAsync(this System.Net.Sockets.Socket socket, byte[] buffer, int length, CancellationToken cancellationToken)
         {
